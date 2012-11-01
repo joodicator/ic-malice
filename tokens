@@ -1,31 +1,9 @@
-The
-looking-glass
-hatta
-opened
-closed
-said
+% * + - / & | ~ ^ ate drank
+( ) , . and but then
+'[^']' '\.'
+[0-9]+
 Alice
-was
-a
-too
-became
-and
-but
-
-number
-letter
-
-ate
-drank
-
-,
-.
-
-+
-*
-/
-%
-^
-&
-|
-~
+The looking-glass hatta
+opened closed was a too became
+letter number
+? identifiers

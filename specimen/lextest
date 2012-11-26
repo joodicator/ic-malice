@@ -1,0 +1,3 @@
+#!/bin/bash
+make --silent AliceLexer.hs && \
+cat $@ | runghc AliceLexer | sort -u

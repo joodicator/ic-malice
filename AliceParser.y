@@ -1,22 +1,105 @@
--- This is a Happy parser specification for the Alice programming language.
--- For more information about Happy, see: http://haskell.org/happy
+-- This is a Happy (http://haskell.org/happy) parser specification for the
+-- Alice programming language.
 --------------------------------------------------------------------------------
 
 {
 module AliceParser where
 
+import Data.Maybe
+import Data.Char
+import Numeric
+
 import AliceToken
 import AliceAST
 }
 
-%tokentype  { Token }
-%error      { error . show }
 %name       parseAlice
+%tokentype  { Token }
+%error      { parseError }
+
+%token
+    AND                 { Tand }
+    BUT                 { Tbut }
+    THEN                { Tthen }
+    WHAT                { Twhat }
+    A                   { Ta }
+    TOO                 { Ttoo }
+    HAD                 { Thad }
+    OF                  { Tof }
+    BECAME              { Tbecame }
+    ATE                 { Tate }
+    DRANK               { Tdrank }
+    SPOKE               { Tspoke }
+    SAID                { Tsaid }
+    FOUND               { Tfound }
+    EITHER              { Teither }
+    OR                  { Tor }
+    PERHAPS             { Tperhaps }
+    SO                  { Tso }
+    MAYBE               { Tmaybe }
+    EVENTUALLY          { Teventually }
+    ENOUGH              { Tenough }
+    TIMES               { Ttimes }
+    BECAUSE             { Tbecause }
+    ALICE               { TAlice }
+    WAS                 { Twas }
+    UNSURE              { Tunsure }
+    WHICH               { Twhich }
+    THE                 { TThe }
+    ROOM                { Troom }
+    LOOKING_GLASS       { Tlooking_glass }
+    CONTAINED           { Tcontained }
+    OPENED              { Topened }
+    CLOSED              { Tclosed }
+    SPIDER              { Tspider }
+    NUMBER              { Tnumber }
+    LETTER              { Tletter }
+    SENTENCE            { Tsentence }
+    ","                 { TComma }
+    "."                 { TDot }
+    "?"                 { TQuest }
+    "("                 { TParenO }
+    ")"                 { TParenC }
+    "+"                 { TPlus }
+    "-"                 { TMinus }
+    "*"                 { TStar }
+    "/"                 { TSlash }
+    "%"                 { TPercent }
+    "=="                { TEqEq }
+    "!="                { TBangEq }
+    "<"                 { TLess }
+    ">"                 { TGreater }
+    "<="                { TLessEq }
+    ">="                { TGreaterEq }
+    "&&"                { TAmpAmp }
+    "||"                { TBarBar }
+    "&"                 { TAmp }
+    "|"                 { TBar }
+    "^"                 { TCaret }
+    "~"                 { TTilde }
+    "!"                 { TBang }
+    "'"                 { TQDouble }
+    '"'                 { TQSingle }
+    QUOTE_CHR           { TQChar $$ }
+    QUOTE_ESC           { TQEscape $$ }
+    LITERAL_NUMBER      { TNumberLiteral $$ }
+    ID                  { TIdentifier $$ }
+
+%left "||"
+%left "&&"
+%left "!"
+%nonassoc "==" "!=" "<" ">" "<=" ">="
+%left "+" "-"
+%left "*" "/" "%"
+%left "|" "^"
+%left "&"
+%left "-" NEGATE
+%left "~"
 
 %%
 
 --------------------------------------------------------------------------------
-body ::       { [Stmt] }
+body ::     { [Stmt] }
   : body_r  { reverse $1 }
 
 body_r ::               { [Stmt] }
@@ -26,7 +109,7 @@ body_r ::               { [Stmt] }
 
 --------------------------------------------------------------------------------
 sentence_r ::                   { [Stmt] }
-  : init_clauses_r final_clause { $2 ++ $1 }
+  : init_clauses_r final_clause { $2 : $1 }
 
 --------------------------------------------------------------------------------
 init_clauses_r ::               { [Stmt] }
@@ -56,7 +139,7 @@ open_clause ::              { Stmt }
   | expr SPOKE              { SWrite{ sSource=$1 } }
   | expr SAID ALICE         { SWrite{ sSource=$1 } }
   | ALICE FOUND expr        { SReturn{ sSource=$3 } }
-  | ID call_params          { SCall{ sID=$1, sParams=$2 } }
+  | ID "(" call_params ")"  { SCall{ sID=$1, sCParams=$3 } }
 
 --------------------------------------------------------------------------------
 struct ::           { Stmt }
@@ -65,6 +148,7 @@ struct ::           { Stmt }
   | struct_while    { $1 }
   | struct_fun      { $1 }
   | struct_sub      { $1 }
+  | struct_block    { $1 }
 
 --------------------------------------------------------------------------------
 struct_either :: { Stmt }
@@ -77,7 +161,7 @@ struct_perhaps :: { Stmt }
     { SBranch{ sBranches=$1, sDefault=$2 } }
 
 branches_r ::                   { [(Expr, [Stmt])] }
-  : PERHAPS branch              { $2 }
+  : PERHAPS branch              { [$2] }
   | branches_r OR MAYBE branch  { $4 : $1 }
 
 branch ::                   { (Expr, [Stmt]) }
@@ -95,18 +179,101 @@ struct_while :: { Stmt }
 --------------------------------------------------------------------------------
 struct_fun :: { Stmt }
   : THE ROOM ID "(" decl_params ")" CONTAINED A type OPENED body CLOSED
-    { SFunDec{ sID=$3, sParams=$5, sType=$9, sBody=$11 } }
+    { SFunDec{ sID=$3, sDParams=$5, sType=$9, sBody=$11 } }
 
 --------------------------------------------------------------------------------
 struct_sub :: { Stmt }
   : THE LOOKING_GLASS ID "(" decl_params ")" OPENED body CLOSED
-    { SSubDec{ sID=$3, sParams=$5, sBody=$8 } }
+    { SSubDec{ sID=$3, sDParams=$5, sBody=$8 } }
 
 --------------------------------------------------------------------------------
-call_params
+struct_block ::         { Stmt }
+  : OPENED body CLOSED  { SBlock $2 }
 
 --------------------------------------------------------------------------------
-decl_params
+decl_params ::      { [Param] }
+  : {- EMPTY -}     { [] }
+  | decl_params_r   { reverse $1 }
+
+decl_params_r ::                    { [Param] }
+  : decl_param                      { [$1] }
+  | decl_params_r "," decl_param    { $3 : $1 }
+
+decl_param ::       { Param }
+  : type ID         { ($2, $1) }
+  | SPIDER type ID  { ($3, TArray $2) }
 
 --------------------------------------------------------------------------------
-expr
+call_params ::              { [Expr] }
+  : {- EMPTY -}             { [] }
+  | call_params_r           { reverse $1 }
+
+call_params_r ::            { [Expr] }
+  : expr                    { [$1] }
+  | call_params_r "," expr  { $3 : $1 }
+
+--------------------------------------------------------------------------------
+type ::         { Type }
+  : NUMBER      { TNumber }
+  | LETTER      { TLetter }
+  | SENTENCE    { TSentence }
+
+--------------------------------------------------------------------------------
+expr ::                         { Expr }
+  : expr_number                 { $1 }
+  | expr_letter                 { $1 }
+  | expr_sentence               { $1 }
+  | ID                          { EVariable $1 }
+  | ID "(" call_params ")"      { EFunCall $1 $3 }
+  | "-" expr %prec NEGATE       { EUnary UNeg $2 }
+  | "!" expr                    { EUnary UNot $2 }
+  | "~" expr                    { EUnary UNotB $2 }
+  | expr "+" expr               { EBinary BAdd $1 $3 }
+  | expr "-" expr               { EBinary BSub $1 $3 }
+  | expr "*" expr               { EBinary BMul $1 $3 }
+  | expr "/" expr               { EBinary BDiv $1 $3 }
+  | expr "%" expr               { EBinary BRem $1 $3 }
+  | expr "==" expr              { EBinary BEqu $1 $3 }
+  | expr "!=" expr              { EBinary BNEq $1 $3 }
+  | expr "<" expr               { EBinary BLT $1 $3 }
+  | expr ">" expr               { EBinary BGT $1 $3 }
+  | expr "<=" expr              { EBinary BLE $1 $3 }
+  | expr ">=" expr              { EBinary BGE $1 $3 }
+  | expr "&&" expr              { EBinary BAnd $1 $3 }
+  | expr "||" expr              { EBinary BOr $1 $3 }
+  | expr "&" expr               { EBinary BAndB $1 $3 }
+  | expr "|" expr               { EBinary BOrB $1 $3 }
+  | expr "^" expr               { EBinary BXOrB $1 $3 }
+
+--------------------------------------------------------------------------------
+expr_number ::      { Expr }
+  : LITERAL_NUMBER  { ENumber $1 }
+
+--------------------------------------------------------------------------------
+expr_letter ::          { Expr }
+  : "'" QUOTE_CHR "'"   { ELetter $2 }
+  | "'" QUOTE_ESC "'"   { ELetter (unescape $2) }
+
+--------------------------------------------------------------------------------
+expr_sentence ::        { Expr }
+  : '"' quote_chars '"' { ESentence (reverse $2) }
+
+quote_chars ::              { String }
+  : {- EMPTY -}             { "" }
+  | quote_chars QUOTE_CHR   { $2 : $1 }
+  | quote_chars QUOTE_ESC   { (unescape $2) : $1 }
+
+--------------------------------------------------------------------------------
+{
+unescape :: String -> Char
+unescape ['\\', c]
+  = fromJust $ lookup c $ zip "\"'\\abfnrtv" "\"\\'\a\b\f\n\r\t\v"
+unescape ('\\' : 'x' : cs)
+  = chr n where [(n, "")] = readHex cs
+
+parseError :: [Token] -> a
+parseError []
+    = error "syntax error at end of input"
+parseError (t : _)
+    = error $ "syntax error at token " ++ show t
+}

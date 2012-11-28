@@ -1,4 +1,7 @@
-all: AliceLexer.hs AliceParser.hs AliceLexerTest AliceParserTest
+RUBBISH=*.o *.hi Alice{Lexer,Parser}.hs 
+BINARIES=Alice{Lexer,Parser}Test
+
+all: AliceLexerTest AliceParserTest
 
 AliceLexerTest: AliceLexerTest.hs AliceLexer.hs AliceToken.hs
 	 ghc AliceLexerTest.hs -o AliceLexerTest
@@ -13,7 +16,10 @@ AliceLexer.hs: AliceLexer.x AliceToken.hs
 	alex AliceLexer.x
 
 clean:
-	rm -f AliceLexerTest AliceParserTest AliceLexer.hs AliceParser.hs *.o *.hi
+	rm -f ${RUBBISH}
 
-.phony: all clean
+cleanall:
+	rm -f ${BINARIES} ${RUBBISH}
+
+.phony: all clean cleanall
 

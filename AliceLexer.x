@@ -1,6 +1,5 @@
 -- This is an Alex (http://haskell.org/alex) lexical analyser specification for
 -- the Alice programming language.
---------------------------------------------------------------------------------
 
 --------------------------------------------------------------------------------
 -- HEADER CODE
@@ -15,8 +14,9 @@ import Numeric
 
 import AliceToken
 }
---------------------------------------------------------------------------------
 
+--------------------------------------------------------------------------------
+-- ALEX DECLARATIONS
 %wrapper "monad"
 
 alice :-
@@ -25,7 +25,6 @@ alice :-
 -- WHITESPACE AND COMMENTS
 <0> [\ \r\n\t\v\f]+ ;
 <0> ^\#.*           ;
---------------------------------------------------------------------------------
 
 --------------------------------------------------------------------------------
 -- KEYWORDS
@@ -67,12 +66,10 @@ alice :-
 <0> "letter"        { con TLetter }
 <0> "sentence"      { con TSentence }
 <0> "piece"         { con TPiece }
---------------------------------------------------------------------------------
 
 --------------------------------------------------------------------------------
 -- IDENTIFIERS
 <0> [A-Za-z_][A-Za-z0-9_]*  { tok TIdentifier }
---------------------------------------------------------------------------------
 
 --------------------------------------------------------------------------------
 -- PUNCTUATION and OPERATORS
@@ -99,12 +96,10 @@ alice :-
 <0> "^"             { con TCaret }
 <0> "~"             { con TTilde }
 <0> "!"             { con TBang }
---------------------------------------------------------------------------------
 
 --------------------------------------------------------------------------------
 -- NUMBER LITERALS
 <0> [0-9]+                  { tok $ TNumberLiteral . read }
---------------------------------------------------------------------------------
 
 --------------------------------------------------------------------------------
 -- QUOTED STRINGS
@@ -116,20 +111,22 @@ alice :-
 <qs,qd> \\x[0-9A-Fa-f]{2}   { tok $ \e -> TQChars [unescape e] }
 <qs>    [^\'\\]+            { tok TQChars }
 <qd>    [^\"\\]+            { tok TQChars }
---------------------------------------------------------------------------------
 
 --------------------------------------------------------------------------------
--- ARRAY SUBSCRIPT
+-- ARRAY SUBSCRIPT OPERATOR
 <0> \' s            { con T's }
---------------------------------------------------------------------------------
 
 --------------------------------------------------------------------------------
 -- FOOTER CODE
 {
+--------------------------------------------------------------------------------
+-- Some important types that Alex will generate are noted here:
+
 -- type AlexAction t = AlexInput -> Int -> Alex t
 -- type AlexInput    = (AlexPosn, Char, [Byte], String)
 -- data AlexPosn     = AlexPn !Int !Int !Int
 
+--------------------------------------------------------------------------------
 -- A lexical token along with additional context.
 data TokenContext
   = TC                          {
@@ -138,6 +135,7 @@ data TokenContext
         tcStr   :: String       } -- The token's representation in the input.
   deriving (Eq, Show)
 
+--------------------------------------------------------------------------------
 -- A monadic action generating a single token as a function of its string
 -- representation.
 tok :: (String -> Token) -> AlexAction TokenContext
@@ -148,17 +146,21 @@ tok strToken input strLen
     repr = take strLen str
     token = strToken repr
 
+--------------------------------------------------------------------------------
 -- Like tok, except it takes a constant value and discards the input.
 con :: Token -> AlexAction TokenContext
 con = tok . const
 
+--------------------------------------------------------------------------------
 -- The token occuring at the end of a successful scan.
 alexEOF :: Alex TokenContext
 alexEOF = do
     (posn, _, _, _) <- alexGetInput
     return TC{ tcToken=TEOF, tcPosn=posn, tcStr=undefined }
 
--- Like alexMonadScan, except it generates useful error messages.
+--------------------------------------------------------------------------------
+-- Like alexMonadScan, except it uses lexicalError to generate useful error
+-- messages.
 aliceMonadScan :: Alex TokenContext
 aliceMonadScan = do
     input <- alexGetInput
@@ -175,6 +177,7 @@ aliceMonadScan = do
         alexSetInput input'
         action (ignorePendingBytes input) len        
 
+--------------------------------------------------------------------------------
 -- Generates a failure condition based on the given invalid input state.
 lexicalError :: AlexInput -> Alex a
 lexicalError (posn, _, _, str)
@@ -184,19 +187,23 @@ lexicalError (posn, _, _, str)
         []  -> "near end of input"
         c:_ -> "near character: " ++ show c
 
+--------------------------------------------------------------------------------
 -- Gives an input stream position in row:col format.
 showPosn :: AlexPosn -> String
 showPosn (AlexPn chr row col)
   = show row ++ ":" ++ show col
 
+--------------------------------------------------------------------------------
 -- Like runAlex, except that: on success, it gives the result alone; and on
 -- failure, it generates a language-level exception instead of a monadic one.
+-- Mainly useful for debugging.
 runAlice :: String -> Alex a -> a
 runAlice input action
   = case runAlex input action of
       Left message  -> error message
       Right result  -> result
 
+--------------------------------------------------------------------------------
 -- Gives the character represented by a valid escape sequence.
 unescape :: String -> Char
 unescape ['\\', c]
@@ -205,4 +212,3 @@ unescape ('\\' : 'x' : cs)
   = chr n where [(n, "")] = readHex cs
 
 }
---------------------------------------------------------------------------------

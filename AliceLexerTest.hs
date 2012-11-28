@@ -2,6 +2,7 @@ module Main where
 
 import Control.Monad
 import System.Exit
+import System.IO
 
 import AliceLexer
 import AliceToken
@@ -12,7 +13,7 @@ scan :: String -> IO ()
 scan input
   = case runAlex input scanList of
       Left msg  -> do
-        putStrLn msg
+        hPutStrLn stderr msg
         exitWith $ ExitFailure 1
       Right tcs -> do
         mapM_ (putStrLn . showTC) tcs

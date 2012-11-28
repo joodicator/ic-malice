@@ -1,5 +1,4 @@
-DEFAULT_TESTS=`echo ex/{archaeology,valid}/*.alice`
-TESTS=${*:-$DEFAULT_TESTS}
+TESTS=${*:-ex/valid/*.alice}
 FAILED=0
 COUNT=0
 

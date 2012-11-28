@@ -1,38 +1,28 @@
 module Main where
 
 import Control.Monad
+import System.Exit
 
 import AliceLexer
 import AliceToken
 
 main = do
-    input <- getContents
-    let Right output = runAlex input scanList
-    mapM_ print output
+    tcs <- return . flip runAlice scanList =<< getContents
+    mapM_ print tcs
+    case last tcs of
+      TC{ tcToken=TError _ } -> do
+        exitWith $ ExitFailure 1
+      _ -> do
+        exitWith ExitSuccess
 
-scanList :: Alex [(Token, AlexPosn)]
+scanList :: Alex [TokenContext]
 scanList = do
-    (posn, _, _, _) <- alexGetInput
-    token <- scan
-    let output = (token, posn)
-    case token of
-      TEOF      -> return []
-      TError s  -> return [output]
-      _         -> return . (output:) =<< scanList
-
-scan :: Alex Token
-scan = do
-    input <- alexGetInput
-    startCode <- alexGetStartCode
-    case alexScan input startCode of
-      AlexEOF ->
-        alexEOF
-      AlexError input' ->
-        return $ TError "lexical error"
-      AlexSkip input' len -> do
-        alexSetInput input'
-        scan
-      AlexToken input' len act -> do
-        alexSetInput input'
-        act (ignorePendingBytes input) len
-
+    tc <- aliceMonadScan
+    case tc of
+      TC{ tcToken=TEOF } -> do
+        return [tc]
+      TC{ tcToken=TError _ } -> do
+        return [tc]
+      _ -> do
+        tail <- scanList
+        return $ tc : tail

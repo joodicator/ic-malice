@@ -41,6 +41,7 @@ data Expr
   | ESentence !String
   | EVariable !ID
   | EFunCall !ID [Expr]
+  | EArrayElement !ID Expr
   | EBinary !BiOp Expr Expr
   | EUnary !UnOp Expr
   deriving (Eq, Show)

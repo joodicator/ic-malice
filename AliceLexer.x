@@ -14,11 +14,16 @@ import AliceToken
 }
 --------------------------------------------------------------------------------
 
-%wrapper "monad" :-
+%wrapper "monad"
+
+@identifier     = [A-Za-z_][A-Za-z0-9_]*
+
+alice :-
 
 --------------------------------------------------------------------------------
--- WHITESPACE
+-- WHITESPACE AND COMMENTS
 <0> $white+         ;
+<0> ^ \# .*         ;
 --------------------------------------------------------------------------------
 
 --------------------------------------------------------------------------------
@@ -60,6 +65,12 @@ import AliceToken
 <0> "number"        { con TNumber }
 <0> "letter"        { con TLetter }
 <0> "sentence"      { con TSentence }
+<0> "piece"         { con TPiece }
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- IDENTIFIERS
+<0> @identifier     { tok TIdentifier }
 --------------------------------------------------------------------------------
 
 --------------------------------------------------------------------------------
@@ -95,11 +106,6 @@ import AliceToken
 --------------------------------------------------------------------------------
 
 --------------------------------------------------------------------------------
--- IDENTIFIERS
-<0> [A-Za-z_][A-Za-z0-9_]*  { tok TIdentifier }
---------------------------------------------------------------------------------
-
---------------------------------------------------------------------------------
 -- QUOTED STRINGS
 <0>     \'                  { con TQSingle `andBegin` qs }
 <0>     \"                  { con TQDouble `andBegin` qd }
@@ -107,7 +113,13 @@ import AliceToken
 <qd>    \"                  { con TQDouble `andBegin` 0 }
 <qs,qd> \\[^x]              { tok TQEscape }
 <qs,qd> \\x[0-9A-Fa-f]{2}   { tok TQEscape }
-<qs,qd> [^\\]               { tok $ \[c] -> TQChar c }
+<qs>    [^\'\\]             { tok $ TQChar . head }
+<qd>    [^\"\\]+            { tok TQChars }
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- ARRAY SUBSCRIPT
+<0> \' s            { con T's }
 --------------------------------------------------------------------------------
 
 --------------------------------------------------------------------------------
@@ -117,18 +129,57 @@ import AliceToken
 -- type AlexInput    = (AlexPosn, Char, [Byte], String)
 -- data AlexPosn     = AlexPn !Int !Int !Int
 
--- An action for the "monad" wrapper which behaves like the "basic" wrapper.
-tok :: (String -> Token) -> AlexAction Token
-tok fun input len
-  = return $ fun $ take len str
-  where (_, _, _, str) = input
+-- A lexical token along with additional context.
+data TokenContext
+  = TC{ tcToken :: !Token, tcPosn :: !AlexPosn }
+  deriving Eq
 
--- Like tok, except it discards the token's string representation.
-con :: Token -> AlexAction Token
+instance Show TokenContext where
+    show TC{ tcToken=token, tcPosn=AlexPn _ row col }
+      = show row ++ ":" ++ show col ++ "\t" ++ show token
+
+-- A monadic action generating a single token as a function of its string
+-- representation.
+tok :: (String -> Token) -> AlexAction TokenContext
+tok strToken input strLen
+  = return TC{ tcToken=token, tcPosn=posn }
+  where
+    (posn, _, _, str) = input
+    token = strToken $ take strLen str
+
+-- Like tok, except it takes a constant value and discards the input.
+con :: Token -> AlexAction TokenContext
 con = tok . const
 
--- The End-Of-File token that Alex's "monad" wrapper will generate.
-alexEOF :: Alex Token
-alexEOF = return TEOF
+alexEOF :: Alex TokenContext
+alexEOF = do
+    (posn, _, _, _) <- alexGetInput
+    return TC{ tcToken=TEOF, tcPosn=posn }
+
+-- Like alexMonadScan, except it generates a TError token upon lexical errors
+-- instead of raising an error condition.
+aliceMonadScan :: Alex TokenContext
+aliceMonadScan = do
+    input <- alexGetInput
+    startCode <- alexGetStartCode
+    case alexScan input startCode of
+      AlexEOF -> do
+        alexEOF
+      AlexError (posn, _, _, _) -> do
+        return TC{ tcToken=TError "lexical error", tcPosn=posn }
+      AlexSkip input' len -> do
+        alexSetInput input'
+        aliceMonadScan
+      AlexToken input' len action -> do
+        alexSetInput input'
+        action (ignorePendingBytes input) len        
+
+-- Like runAlex, except it gives a single result instead of an Either.
+runAlice :: String -> Alex a -> a
+runAlice input action
+  = case runAlex input action of
+      Left message  -> error message
+      Right result  -> result
+
 }
 --------------------------------------------------------------------------------

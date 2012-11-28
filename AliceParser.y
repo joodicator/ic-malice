@@ -55,6 +55,7 @@ import AliceAST
     NUMBER              { TNumber }
     LETTER              { TLetter }
     SENTENCE            { TSentence }
+    PIECE               { TPiece }
     ","                 { TComma }
     "."                 { TDot }
     "?"                 { TQuest }
@@ -81,9 +82,11 @@ import AliceAST
     "'"                 { TQDouble }
     '"'                 { TQSingle }
     QUOTE_CHR           { TQChar $$ }
+    QUOTE_CHRS          { TQChars $$ }
     QUOTE_ESC           { TQEscape $$ }
     LITERAL_NUMBER      { TNumberLiteral $$ }
     ID                  { TIdentifier $$ }
+    "'s"                { T's }
 
 %left "||"
 %left "&&"
@@ -225,6 +228,7 @@ expr ::                         { Expr }
   | expr_sentence               { $1 }
   | ID                          { EVariable $1 }
   | ID "(" call_params ")"      { EFunCall $1 $3 }
+  | ID "'s" expr PIECE          { EArrayElement $1 $3 }
   | "-" expr %prec NEGATE       { EUnary UNeg $2 }
   | "!" expr                    { EUnary UNot $2 }
   | "~" expr                    { EUnary UNotB $2 }
@@ -256,12 +260,12 @@ expr_letter ::          { Expr }
 
 --------------------------------------------------------------------------------
 expr_sentence ::        { Expr }
-  : '"' quote_chars '"' { ESentence (reverse $2) }
+  : '"' quote_chars '"' { ESentence (concat $ reverse $2) }
 
-quote_chars ::              { String }
-  : {- EMPTY -}             { "" }
-  | quote_chars QUOTE_CHR   { $2 : $1 }
-  | quote_chars QUOTE_ESC   { (unescape $2) : $1 }
+quote_chars ::              { [String] }
+  : {- EMPTY -}             { [] }
+  | quote_chars QUOTE_CHRS  { $2 : $1 }
+  | quote_chars QUOTE_ESC   { [unescape $2] : $1 }
 
 --------------------------------------------------------------------------------
 {

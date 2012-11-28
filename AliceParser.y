@@ -5,88 +5,85 @@
 {
 module AliceParser where
 
-import Data.Maybe
-import Data.Char
-import Numeric
-
 import AliceToken
 import AliceAST
+import AliceLexer
 }
 
-%name       parseAlice
-%tokentype  { Token }
-%error      { parseError }
+%name       aliceParse
+%tokentype  { TokenContext }
+%monad      { Alex }
+%lexer      { (>>=) aliceMonadScan } { TC{ tcToken=TEOF } }
+%error      { syntaxError }
 
 %token
-    AND                 { TAnd }
-    BUT                 { TBut }
-    THEN                { TThen }
-    WHAT                { TWhat }
-    A                   { TA }
-    TOO                 { TToo }
-    HAD                 { THad }
-    OF                  { TOf }
-    BECAME              { TBecame }
-    ATE                 { TAte }
-    DRANK               { TDrank }
-    SPOKE               { TSpoke }
-    SAID                { TSaid }
-    FOUND               { TFound }
-    EITHER              { TEither }
-    OR                  { TOr }
-    PERHAPS             { TPerhaps }
-    SO                  { TSo }
-    MAYBE               { TMaybe }
-    EVENTUALLY          { TEventually }
-    ENOUGH              { TEnough }
-    TIMES               { TTimes }
-    BECAUSE             { TBecause }
-    ALICE               { TAlice }
-    WAS                 { TWas }
-    UNSURE              { TUnsure }
-    WHICH               { TWhich }
-    THE                 { TThe }
-    ROOM                { TRoom }
-    LOOKING_GLASS       { TLookingGlass }
-    CONTAINED           { TContained }
-    OPENED              { TOpened }
-    CLOSED              { TClosed }
-    SPIDER              { TSpider }
-    NUMBER              { TNumber }
-    LETTER              { TLetter }
-    SENTENCE            { TSentence }
-    PIECE               { TPiece }
-    ","                 { TComma }
-    "."                 { TDot }
-    "?"                 { TQuest }
-    "("                 { TParenO }
-    ")"                 { TParenC }
-    "+"                 { TPlus }
-    "-"                 { TMinus }
-    "*"                 { TStar }
-    "/"                 { TSlash }
-    "%"                 { TPercent }
-    "=="                { TEqEq }
-    "!="                { TBangEq }
-    "<"                 { TLess }
-    ">"                 { TGreater }
-    "<="                { TLessEq }
-    ">="                { TGreaterEq }
-    "&&"                { TAmpAmp }
-    "||"                { TBarBar }
-    "&"                 { TAmp }
-    "|"                 { TBar }
-    "^"                 { TCaret }
-    "~"                 { TTilde }
-    "!"                 { TBang }
-    "'"                 { TQDouble }
-    '"'                 { TQSingle }
-    QUOTE_CHR           { TQChar $$ }
-    QUOTE_CHRS          { TQChars $$ }
-    QUOTE_ESC           { TQEscape $$ }
-    LITERAL_NUMBER      { TNumberLiteral $$ }
-    ID                  { TIdentifier $$ }
-    "'s"                { T's }
+    AND                 { TC{ tcToken=TAnd } }
+    BUT                 { TC{ tcToken=TBut } }
+    THEN                { TC{ tcToken=TThen } }
+    WHAT                { TC{ tcToken=TWhat } }
+    A                   { TC{ tcToken=TA } }
+    TOO                 { TC{ tcToken=TToo } }
+    HAD                 { TC{ tcToken=THad } }
+    OF                  { TC{ tcToken=TOf } }
+    BECAME              { TC{ tcToken=TBecame } }
+    ATE                 { TC{ tcToken=TAte } }
+    DRANK               { TC{ tcToken=TDrank } }
+    SPOKE               { TC{ tcToken=TSpoke } }
+    SAID                { TC{ tcToken=TSaid } }
+    FOUND               { TC{ tcToken=TFound } }
+    EITHER              { TC{ tcToken=TEither } }
+    OR                  { TC{ tcToken=TOr } }
+    PERHAPS             { TC{ tcToken=TPerhaps } }
+    SO                  { TC{ tcToken=TSo } }
+    MAYBE               { TC{ tcToken=TMaybe } }
+    EVENTUALLY          { TC{ tcToken=TEventually } }
+    ENOUGH              { TC{ tcToken=TEnough } }
+    TIMES               { TC{ tcToken=TTimes } }
+    BECAUSE             { TC{ tcToken=TBecause } }
+    ALICE               { TC{ tcToken=TAlice } }
+    WAS                 { TC{ tcToken=TWas } }
+    UNSURE              { TC{ tcToken=TUnsure } }
+    WHICH               { TC{ tcToken=TWhich } }
+    THE                 { TC{ tcToken=TThe } }
+    ROOM                { TC{ tcToken=TRoom } }
+    LOOKING_GLASS       { TC{ tcToken=TLookingGlass } }
+    CONTAINED           { TC{ tcToken=TContained } }
+    OPENED              { TC{ tcToken=TOpened } }
+    CLOSED              { TC{ tcToken=TClosed } }
+    SPIDER              { TC{ tcToken=TSpider } }
+    NUMBER              { TC{ tcToken=TNumber } }
+    LETTER              { TC{ tcToken=TLetter } }
+    SENTENCE            { TC{ tcToken=TSentence } }
+    PIECE               { TC{ tcToken=TPiece } }
+    ","                 { TC{ tcToken=TComma } }
+    "."                 { TC{ tcToken=TDot } }
+    "?"                 { TC{ tcToken=TQuest } }
+    "("                 { TC{ tcToken=TParenO } }
+    ")"                 { TC{ tcToken=TParenC } }
+    "+"                 { TC{ tcToken=TPlus } }
+    "-"                 { TC{ tcToken=TMinus } }
+    "*"                 { TC{ tcToken=TStar } }
+    "/"                 { TC{ tcToken=TSlash } }
+    "%"                 { TC{ tcToken=TPercent } }
+    "=="                { TC{ tcToken=TEqEq } }
+    "!="                { TC{ tcToken=TBangEq } }
+    "<"                 { TC{ tcToken=TLess } }
+    ">"                 { TC{ tcToken=TGreater } }
+    "<="                { TC{ tcToken=TLessEq } }
+    ">="                { TC{ tcToken=TGreaterEq } }
+    "&&"                { TC{ tcToken=TAmpAmp } }
+    "||"                { TC{ tcToken=TBarBar } }
+    "&"                 { TC{ tcToken=TAmp } }
+    "|"                 { TC{ tcToken=TBar } }
+    "^"                 { TC{ tcToken=TCaret } }
+    "~"                 { TC{ tcToken=TTilde } }
+    "!"                 { TC{ tcToken=TBang } }
+    "'"                 { TC{ tcToken=TQDouble } }
+    '"'                 { TC{ tcToken=TQSingle } }
+    "'s"                { TC{ tcToken=T's } }
+    QUOTE_CHARS         { TC{ tcToken=TQChars $$ } }
+    LITERAL_NUMBER      { TC{ tcToken=TNumberLiteral $$ } }
+    ID                  { TC{ tcToken=TIdentifier $$ } }
 
 %left "||"
 %left "&&"
@@ -100,6 +97,10 @@ import AliceAST
 %left "~"
 
 %%
+
+--------------------------------------------------------------------------------
+program ::  { [Stmt] }
+  : body    { $1 }
 
 --------------------------------------------------------------------------------
 body ::     { [Stmt] }
@@ -229,6 +230,7 @@ expr ::                         { Expr }
   | ID                          { EVariable $1 }
   | ID "(" call_params ")"      { EFunCall $1 $3 }
   | ID "'s" expr PIECE          { EArrayElement $1 $3 }
+  | "(" expr ")"                { $2 }
   | "-" expr %prec NEGATE       { EUnary UNeg $2 }
   | "!" expr                    { EUnary UNot $2 }
   | "~" expr                    { EUnary UNotB $2 }
@@ -254,30 +256,27 @@ expr_number ::      { Expr }
   : LITERAL_NUMBER  { ENumber $1 }
 
 --------------------------------------------------------------------------------
-expr_letter ::          { Expr }
-  : "'" QUOTE_CHR "'"   { ELetter $2 }
-  | "'" QUOTE_ESC "'"   { ELetter (unescape $2) }
+expr_letter :: { Expr }
+  : "'" quote_chars "'"
+    {%^ \tc -> case $2 of { [c] -> return $ ELetter c; _ -> syntaxError tc } }
 
---------------------------------------------------------------------------------
-expr_sentence ::        { Expr }
-  : '"' quote_chars '"' { ESentence (concat $ reverse $2) }
+expr_sentence ::                { Expr }
+  : '"' quote_chars '"'         { ESentence $2 }
 
-quote_chars ::              { [String] }
-  : {- EMPTY -}             { [] }
-  | quote_chars QUOTE_CHRS  { $2 : $1 }
-  | quote_chars QUOTE_ESC   { [unescape $2] : $1 }
+quote_chars ::                  { String }
+  : quote_charss_r              { concat $ reverse $1 }
+quote_charss_r ::               { [String] }
+  : {- EMPTY -}                 { [] }
+  | quote_charss_r QUOTE_CHARS  { $2 : $1 }
 
 --------------------------------------------------------------------------------
 {
-unescape :: String -> Char
-unescape ['\\', c]
-  = fromJust $ lookup c $ zip "\"'\\abfnrtv" "\"\\'\a\b\f\n\r\t\v"
-unescape ('\\' : 'x' : cs)
-  = chr n where [(n, "")] = readHex cs
-
-parseError :: [Token] -> a
-parseError []
-    = error "syntax error at end of input"
-parseError (t : _)
-    = error $ "syntax error at token " ++ show t
+-- Generates a failure condition based on the given invalid token context.
+syntaxError :: TokenContext -> Alex a
+syntaxError TC{ tcToken=token, tcPosn=posn, tcStr=str }
+  = alexError $ "[" ++ showPosn posn ++ "] syntax error " ++ msg
+  where
+    msg = case token of
+      TEOF  -> "near end of input"
+      _     -> "near token: " ++ show str
 }

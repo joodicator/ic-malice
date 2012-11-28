@@ -9,6 +9,9 @@ module AliceLexer where
 
 import Control.Monad
 import System.IO
+import Data.Maybe
+import Data.Char
+import Numeric
 
 import AliceToken
 }
@@ -16,14 +19,12 @@ import AliceToken
 
 %wrapper "monad"
 
-@identifier     = [A-Za-z_][A-Za-z0-9_]*
-
 alice :-
 
 --------------------------------------------------------------------------------
 -- WHITESPACE AND COMMENTS
-<0> $white+         ;
-<0> ^ \# .*         ;
+<0> [\ \r\n\t\v\f]+ ;
+<0> ^\#.*           ;
 --------------------------------------------------------------------------------
 
 --------------------------------------------------------------------------------
@@ -70,7 +71,7 @@ alice :-
 
 --------------------------------------------------------------------------------
 -- IDENTIFIERS
-<0> @identifier     { tok TIdentifier }
+<0> [A-Za-z_][A-Za-z0-9_]*  { tok TIdentifier }
 --------------------------------------------------------------------------------
 
 --------------------------------------------------------------------------------
@@ -111,9 +112,9 @@ alice :-
 <0>     \"                  { con TQDouble `andBegin` qd }
 <qs>    \'                  { con TQSingle `andBegin` 0 }
 <qd>    \"                  { con TQDouble `andBegin` 0 }
-<qs,qd> \\[^x]              { tok TQEscape }
-<qs,qd> \\x[0-9A-Fa-f]{2}   { tok TQEscape }
-<qs>    [^\'\\]             { tok $ TQChar . head }
+<qs,qd> \\[^x]              { tok $ \e -> TQChars [unescape e] }
+<qs,qd> \\x[0-9A-Fa-f]{2}   { tok $ \e -> TQChars [unescape e] }
+<qs>    [^\'\\]+            { tok TQChars }
 <qd>    [^\"\\]+            { tok TQChars }
 --------------------------------------------------------------------------------
 
@@ -131,33 +132,33 @@ alice :-
 
 -- A lexical token along with additional context.
 data TokenContext
-  = TC{ tcToken :: !Token, tcPosn :: !AlexPosn }
-  deriving Eq
-
-instance Show TokenContext where
-    show TC{ tcToken=token, tcPosn=AlexPn _ row col }
-      = show row ++ ":" ++ show col ++ "\t" ++ show token
+  = TC                          {
+        tcToken :: !Token       , -- The token.
+        tcPosn  :: !AlexPosn    , -- The token's position in the input.
+        tcStr   :: String       } -- The token's representation in the input.
+  deriving (Eq, Show)
 
 -- A monadic action generating a single token as a function of its string
 -- representation.
 tok :: (String -> Token) -> AlexAction TokenContext
 tok strToken input strLen
-  = return TC{ tcToken=token, tcPosn=posn }
+  = return TC{ tcToken=token, tcPosn=posn, tcStr=repr }
   where
     (posn, _, _, str) = input
-    token = strToken $ take strLen str
+    repr = take strLen str
+    token = strToken repr
 
 -- Like tok, except it takes a constant value and discards the input.
 con :: Token -> AlexAction TokenContext
 con = tok . const
 
+-- The token occuring at the end of a successful scan.
 alexEOF :: Alex TokenContext
 alexEOF = do
     (posn, _, _, _) <- alexGetInput
-    return TC{ tcToken=TEOF, tcPosn=posn }
+    return TC{ tcToken=TEOF, tcPosn=posn, tcStr=undefined }
 
--- Like alexMonadScan, except it generates a TError token upon lexical errors
--- instead of raising an error condition.
+-- Like alexMonadScan, except it generates useful error messages.
 aliceMonadScan :: Alex TokenContext
 aliceMonadScan = do
     input <- alexGetInput
@@ -165,8 +166,8 @@ aliceMonadScan = do
     case alexScan input startCode of
       AlexEOF -> do
         alexEOF
-      AlexError (posn, _, _, _) -> do
-        return TC{ tcToken=TError "lexical error", tcPosn=posn }
+      AlexError input -> do
+        lexicalError input
       AlexSkip input' len -> do
         alexSetInput input'
         aliceMonadScan
@@ -174,12 +175,34 @@ aliceMonadScan = do
         alexSetInput input'
         action (ignorePendingBytes input) len        
 
--- Like runAlex, except it gives a single result instead of an Either.
+-- Generates a failure condition based on the given invalid input state.
+lexicalError :: AlexInput -> Alex a
+lexicalError (posn, _, _, str)
+  = alexError $ "[" ++ showPosn posn ++ "] lexical error " ++ msg
+  where
+    msg = case str of
+        []  -> "near end of input"
+        c:_ -> "near character: " ++ show c
+
+-- Gives an input stream position in row:col format.
+showPosn :: AlexPosn -> String
+showPosn (AlexPn chr row col)
+  = show row ++ ":" ++ show col
+
+-- Like runAlex, except that: on success, it gives the result alone; and on
+-- failure, it generates a language-level exception instead of a monadic one.
 runAlice :: String -> Alex a -> a
 runAlice input action
   = case runAlex input action of
       Left message  -> error message
       Right result  -> result
+
+-- Gives the character represented by a valid escape sequence.
+unescape :: String -> Char
+unescape ['\\', c]
+  = fromJust $ lookup c $ zip "\"'\\abfnrtv" "\"\\'\a\b\f\n\r\t\v"
+unescape ('\\' : 'x' : cs)
+  = chr n where [(n, "")] = readHex cs
 
 }
 --------------------------------------------------------------------------------

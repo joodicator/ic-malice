@@ -64,12 +64,10 @@ data Token
   | TBang
   | TQSingle
   | TQDouble
-  | TQChar !Char
   | TQChars String
-  | TQEscape String
   | TNumberLiteral !Integer
   | TIdentifier String
   | T's
   | TEOF
-  | TError String
+  | TError
   deriving (Eq, Show)

@@ -22,13 +22,12 @@ scanList :: Alex [TokenContext]
 scanList = do
     tc <- aliceMonadScan
     case tc of
-      TC{ tcToken=TEOF } -> do
+      TC{ tcTok=TEOF } -> do
         return [tc]
       _ -> do
         tail <- scanList
         return $ tc : tail
 
 showTC :: TokenContext -> String
-showTC TC{ tcToken=token, tcPosn=posn }
-  = showPosn posn ++ "\t" ++ show token
-          
+showTC TC{ tcTok=token, tcPos=(chr, row, col) }
+  = show row ++ ":" ++ show col ++ "\t" ++ show token

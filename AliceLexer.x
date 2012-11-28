@@ -127,22 +127,14 @@ alice :-
 -- data AlexPosn     = AlexPn !Int !Int !Int
 
 --------------------------------------------------------------------------------
--- A lexical token along with additional context.
-data TokenContext
-  = TC                          {
-        tcToken :: !Token       , -- The token.
-        tcPosn  :: !AlexPosn    , -- The token's position in the input.
-        tcStr   :: String       } -- The token's representation in the input.
-  deriving (Eq, Show)
-
---------------------------------------------------------------------------------
 -- A monadic action generating a single token as a function of its string
 -- representation.
 tok :: (String -> Token) -> AlexAction TokenContext
 tok strToken input strLen
-  = return TC{ tcToken=token, tcPosn=posn, tcStr=repr }
+  = return TC{ tcTok=token, tcPos=posn, tcStr=repr }
   where
-    (posn, _, _, str) = input
+    (AlexPn chr row col, _, _, str) = input
+    posn = (chr, row, col)
     repr = take strLen str
     token = strToken repr
 
@@ -155,8 +147,8 @@ con = tok . const
 -- The token occuring at the end of a successful scan.
 alexEOF :: Alex TokenContext
 alexEOF = do
-    (posn, _, _, _) <- alexGetInput
-    return TC{ tcToken=TEOF, tcPosn=posn, tcStr=undefined }
+    (AlexPn chr row col, _, _, _) <- alexGetInput
+    return TC{ tcTok=TEOF, tcPos=(chr, row, col), tcStr=undefined }
 
 --------------------------------------------------------------------------------
 -- Like alexMonadScan, except it uses lexicalError to generate useful error
@@ -180,28 +172,12 @@ aliceMonadScan = do
 --------------------------------------------------------------------------------
 -- Generates a failure condition based on the given invalid input state.
 lexicalError :: AlexInput -> Alex a
-lexicalError (posn, _, _, str)
-  = alexError $ "[" ++ showPosn posn ++ "] lexical error " ++ msg
+lexicalError (AlexPn chr row col, _, _, str)
+  = alexError $ "[" ++ show row ++ ":" ++ show col ++ "] lexical error " ++ msg
   where
     msg = case str of
         []  -> "near end of input"
         c:_ -> "near character: " ++ show c
-
---------------------------------------------------------------------------------
--- Gives an input stream position in row:col format.
-showPosn :: AlexPosn -> String
-showPosn (AlexPn chr row col)
-  = show row ++ ":" ++ show col
-
---------------------------------------------------------------------------------
--- Like runAlex, except that: on success, it gives the result alone; and on
--- failure, it generates a language-level exception instead of a monadic one.
--- Mainly useful for debugging.
-runAlice :: String -> Alex a -> a
-runAlice input action
-  = case runAlex input action of
-      Left message  -> error message
-      Right result  -> result
 
 --------------------------------------------------------------------------------
 -- Gives the character represented by a valid escape sequence.

@@ -1,5 +1,17 @@
 module AliceToken where
 
+--------------------------------------------------------------------------------
+-- A concrete occurence of a lexical token, with information about its
+-- manifestion in the input stream.
+data TokenContext
+  = TC                          {
+        tcTok :: !Token         , -- The corresponding abstract token.
+        tcPos :: !(Int,Int,Int) , -- Position (chr, row, col) in the stream.
+        tcStr :: String         } -- Concrete representation from the input.
+  deriving (Eq, Show)
+
+--------------------------------------------------------------------------------
+-- An abstract lexical token.
 data Token
   = TAnd
   | TBut

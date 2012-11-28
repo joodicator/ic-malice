@@ -14,8 +14,8 @@ for FILE in $TESTS; do
 done
 
 if [[ $FAILED == 0 ]]; then
-    echo "==> All tests passed." >&2
+    echo "==> `basename $PROGRAM`: all tests passed." >&2
 else
-    echo "==> $FAILED/$COUNT tests failed." >&2
+    echo "==> `basename $PROGRAM`: $FAILED/$COUNT tests failed." >&2
     exit 1
 fi

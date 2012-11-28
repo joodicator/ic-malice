@@ -1956,7 +1956,7 @@ happyReduction_47 (HappyTerminal (TIdentifier happy_var_3))
 	(HappyAbsSyn26  happy_var_2)
 	_
 	 =  HappyAbsSyn23
-		 ((happy_var_3, TArray happy_var_2)
+		 ((happy_var_3, TyArray happy_var_2)
 	)
 happyReduction_47 _ _ _  = notHappyAtAll 
 
@@ -1991,19 +1991,19 @@ happyReduction_51 _ _ _  = notHappyAtAll
 happyReduce_52 = happySpecReduce_1  26 happyReduction_52
 happyReduction_52 _
 	 =  HappyAbsSyn26
-		 (TNumber
+		 (TyNumber
 	)
 
 happyReduce_53 = happySpecReduce_1  26 happyReduction_53
 happyReduction_53 _
 	 =  HappyAbsSyn26
-		 (TLetter
+		 (TyLetter
 	)
 
 happyReduce_54 = happySpecReduce_1  26 happyReduction_54
 happyReduction_54 _
 	 =  HappyAbsSyn26
-		 (TSentence
+		 (TySentence
 	)
 
 happyReduce_55 = happySpecReduce_1  27 happyReduction_55
@@ -2273,43 +2273,43 @@ happyNewToken action sts stk [] =
 happyNewToken action sts stk (tk:tks) =
 	let cont i = action i i tk (HappyState action) sts stk tks in
 	case tk of {
-	Tand -> cont 32;
-	Tbut -> cont 33;
-	Tthen -> cont 34;
-	Twhat -> cont 35;
-	Ta -> cont 36;
-	Ttoo -> cont 37;
-	Thad -> cont 38;
-	Tof -> cont 39;
-	Tbecame -> cont 40;
-	Tate -> cont 41;
-	Tdrank -> cont 42;
-	Tspoke -> cont 43;
-	Tsaid -> cont 44;
-	Tfound -> cont 45;
-	Teither -> cont 46;
-	Tor -> cont 47;
-	Tperhaps -> cont 48;
-	Tso -> cont 49;
-	Tmaybe -> cont 50;
-	Teventually -> cont 51;
-	Tenough -> cont 52;
-	Ttimes -> cont 53;
-	Tbecause -> cont 54;
+	TAnd -> cont 32;
+	TBut -> cont 33;
+	TThen -> cont 34;
+	TWhat -> cont 35;
+	TA -> cont 36;
+	TToo -> cont 37;
+	THad -> cont 38;
+	TOf -> cont 39;
+	TBecame -> cont 40;
+	TAte -> cont 41;
+	TDrank -> cont 42;
+	TSpoke -> cont 43;
+	TSaid -> cont 44;
+	TFound -> cont 45;
+	TEither -> cont 46;
+	TOr -> cont 47;
+	TPerhaps -> cont 48;
+	TSo -> cont 49;
+	TMaybe -> cont 50;
+	TEventually -> cont 51;
+	TEnough -> cont 52;
+	TTimes -> cont 53;
+	TBecause -> cont 54;
 	TAlice -> cont 55;
-	Twas -> cont 56;
-	Tunsure -> cont 57;
-	Twhich -> cont 58;
+	TWas -> cont 56;
+	TUnsure -> cont 57;
+	TWhich -> cont 58;
 	TThe -> cont 59;
-	Troom -> cont 60;
-	Tlooking_glass -> cont 61;
-	Tcontained -> cont 62;
-	Topened -> cont 63;
-	Tclosed -> cont 64;
-	Tspider -> cont 65;
-	Tnumber -> cont 66;
-	Tletter -> cont 67;
-	Tsentence -> cont 68;
+	TRoom -> cont 60;
+	TLookingGlass -> cont 61;
+	TContained -> cont 62;
+	TOpened -> cont 63;
+	TClosed -> cont 64;
+	TSpider -> cont 65;
+	TNumber -> cont 66;
+	TLetter -> cont 67;
+	TSentence -> cont 68;
 	TComma -> cont 69;
 	TDot -> cont 70;
 	TQuest -> cont 71;

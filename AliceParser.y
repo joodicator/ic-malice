@@ -18,43 +18,43 @@ import AliceAST
 %error      { parseError }
 
 %token
-    AND                 { Tand }
-    BUT                 { Tbut }
-    THEN                { Tthen }
-    WHAT                { Twhat }
-    A                   { Ta }
-    TOO                 { Ttoo }
-    HAD                 { Thad }
-    OF                  { Tof }
-    BECAME              { Tbecame }
-    ATE                 { Tate }
-    DRANK               { Tdrank }
-    SPOKE               { Tspoke }
-    SAID                { Tsaid }
-    FOUND               { Tfound }
-    EITHER              { Teither }
-    OR                  { Tor }
-    PERHAPS             { Tperhaps }
-    SO                  { Tso }
-    MAYBE               { Tmaybe }
-    EVENTUALLY          { Teventually }
-    ENOUGH              { Tenough }
-    TIMES               { Ttimes }
-    BECAUSE             { Tbecause }
+    AND                 { TAnd }
+    BUT                 { TBut }
+    THEN                { TThen }
+    WHAT                { TWhat }
+    A                   { TA }
+    TOO                 { TToo }
+    HAD                 { THad }
+    OF                  { TOf }
+    BECAME              { TBecame }
+    ATE                 { TAte }
+    DRANK               { TDrank }
+    SPOKE               { TSpoke }
+    SAID                { TSaid }
+    FOUND               { TFound }
+    EITHER              { TEither }
+    OR                  { TOr }
+    PERHAPS             { TPerhaps }
+    SO                  { TSo }
+    MAYBE               { TMaybe }
+    EVENTUALLY          { TEventually }
+    ENOUGH              { TEnough }
+    TIMES               { TTimes }
+    BECAUSE             { TBecause }
     ALICE               { TAlice }
-    WAS                 { Twas }
-    UNSURE              { Tunsure }
-    WHICH               { Twhich }
+    WAS                 { TWas }
+    UNSURE              { TUnsure }
+    WHICH               { TWhich }
     THE                 { TThe }
-    ROOM                { Troom }
-    LOOKING_GLASS       { Tlooking_glass }
-    CONTAINED           { Tcontained }
-    OPENED              { Topened }
-    CLOSED              { Tclosed }
-    SPIDER              { Tspider }
-    NUMBER              { Tnumber }
-    LETTER              { Tletter }
-    SENTENCE            { Tsentence }
+    ROOM                { TRoom }
+    LOOKING_GLASS       { TLookingGlass }
+    CONTAINED           { TContained }
+    OPENED              { TOpened }
+    CLOSED              { TClosed }
+    SPIDER              { TSpider }
+    NUMBER              { TNumber }
+    LETTER              { TLetter }
+    SENTENCE            { TSentence }
     ","                 { TComma }
     "."                 { TDot }
     "?"                 { TQuest }
@@ -201,7 +201,7 @@ decl_params_r ::                    { [Param] }
 
 decl_param ::       { Param }
   : type ID         { ($2, $1) }
-  | SPIDER type ID  { ($3, TArray $2) }
+  | SPIDER type ID  { ($3, TyArray $2) }
 
 --------------------------------------------------------------------------------
 call_params ::              { [Expr] }
@@ -214,9 +214,9 @@ call_params_r ::            { [Expr] }
 
 --------------------------------------------------------------------------------
 type ::         { Type }
-  : NUMBER      { TNumber }
-  | LETTER      { TLetter }
-  | SENTENCE    { TSentence }
+  : NUMBER      { TyNumber }
+  | LETTER      { TyLetter }
+  | SENTENCE    { TySentence }
 
 --------------------------------------------------------------------------------
 expr ::                         { Expr }

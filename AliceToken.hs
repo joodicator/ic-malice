@@ -2,12 +2,12 @@ module AliceToken where
 
 --------------------------------------------------------------------------------
 data Token
-  = Tand | Tbut | Tthen | Twhat | Ta | Ttoo | Thad | Tof
-  | Tbecame | Tate | Tdrank | Tspoke | Tsaid | Tfound
-  | Teither | Tor | Tperhaps | Tso | Tmaybe | Teventually | Tenough | Ttimes
-  | Tbecause | TAlice | Twas | Tunsure | Twhich
-  | TThe | Troom | Tlooking_glass | Tcontained | Topened | Tclosed
-  | Tspider | Tnumber | Tletter | Tsentence
+  = TAnd | TBut | TThen | TWhat | TA | TToo | THad | TOf
+  | TBecame | TAte | TDrank | TSpoke | TSaid | TFound
+  | TEither | TOr | TPerhaps | TSo | TMaybe | TEventually | TEnough | TTimes
+  | TBecause | TAlice | TWas | TUnsure | TWhich
+  | TThe | TRoom | TLookingGlass | TContained | TOpened | TClosed
+  | TSpider | TNumber | TLetter | TSentence
   
   | TComma | TDot | TQuest | TParenO | TParenC
   | TPlus | TMinus | TStar | TSlash | TPercent
@@ -18,5 +18,5 @@ data Token
   | TNumberLiteral !Integer
   | TIdentifier String
   
-  | TEOF
+  | TEOF | TError String
   deriving (Eq, Show)

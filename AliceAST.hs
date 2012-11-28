@@ -10,29 +10,29 @@ type Branch
   = (Expr, [Stmt])
 
 data Type
-  = TNumber
-  | TLetter
-  | TSentence
-  | TBool
-  | TArray !Type
+  = TyNumber
+  | TyLetter
+  | TySentence
+  | TyBool
+  | TyArray !Type
   deriving (Eq, Show)
 
 data Stmt
-  = SVarDec{ sID :: !ID, sType :: !Type }
+  = SFunDec{ sID :: !ID, sDParams :: [Param], sBody :: [Stmt], sType :: !Type }
+  | SSubDec{ sID :: !ID, sDParams :: [Param], sBody :: [Stmt] }
+  | SVarDec{ sID :: !ID, sType :: !Type }
   | SVarIni{ sID :: !ID, sType :: !Type, sSource :: Expr }
   | SArrDec{ sID :: !ID, sType :: !Type, sSize :: Expr }
+  | SBranch{ sBranches :: [Branch], sDefault :: [Stmt] }
+  | SWhile{ sGuard :: Expr, sBody :: [Stmt] }
+  | SBlock{ sBody :: [Stmt] }
+  | SCall{ sID :: !ID, sCParams :: [Expr] }
+  | SReturn{ sSource :: Expr }
   | SAssign{ sTarget :: Expr, sSource :: Expr }
   | SInc{ sTarget :: Expr }
   | SDec{ sTarget :: Expr }
   | SRead{ sTarget :: Expr }
   | SWrite{ sSource :: Expr }
-  | SReturn{ sSource :: Expr }
-  | SCall{ sID :: !ID, sCParams :: [Expr] }
-  | SBranch{ sBranches :: [Branch], sDefault :: [Stmt] }
-  | SWhile{ sGuard :: Expr, sBody :: [Stmt] }
-  | SSubDec{ sID :: !ID, sDParams :: [Param], sBody :: [Stmt] }
-  | SFunDec{ sID :: !ID, sDParams :: [Param], sBody :: [Stmt], sType :: !Type }
-  | SBlock{ sBody :: [Stmt] }
   deriving (Eq, Show)
 
 data Expr

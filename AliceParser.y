@@ -116,17 +116,20 @@ program ::  { [Stmt] }
 
 --------------------------------------------------------------------------------
 -- A sequence of statements.
-body ::         { [Stmt] }
-  : body_r      { reverse $1 }
+body ::                 { [Stmt] }
+  : body_r              { reverse $1 }
 
-body_r ::       { [Stmt] }
-  : {- EMPTY -} { [] }
-  | body_r stmt { $2 : $1 }
-  | body_r "."  { $1 }
+body_r ::               { [Stmt] }
+  : {- EMPTY -}         { [] }
+  | body_r stmt         { $2 : $1 }
+  | body_r "."          { $1 }
 
 --------------------------------------------------------------------------------
 -- A declaration or sequential instruction.
 stmt ::                     { Stmt }
+  : next_token stmt_partial { $2{ sPosn=tcPos $1 } }
+
+stmt_partial ::             { Stmt }
   : WHAT WAS expr "?"       { SRead{ sTarget=$3 } }
   | clause clause_term      { $1 }
   | struct_block            { $1 }
@@ -137,9 +140,9 @@ stmt ::                     { Stmt }
   | struct_sub              { $1 }
 
 clause ::                   { Stmt }
-  : ID WAS A type           { SVarDec{ sID=$1, sType=$4 } }
-  | ID WAS A type TOO       { SVarDec{ sID=$1, sType=$4 } }
-  | ID WAS A type OF expr   { SVarIni{ sID=$1, sType=$4, sSource=$6 } }
+  : ID WAS A type           { SVarDec{ sID=$1, sType=$4, sInit=Nothing } }
+  | ID WAS A type TOO       { SVarDec{ sID=$1, sType=$4, sInit=Nothing } }
+  | ID WAS A type OF expr   { SVarDec{ sID=$1, sType=$4, sInit=Just $6 } }
   | ID HAD expr type        { SArrDec{ sID=$1, sType=$4, sSize=$3 } }
   | expr BECAME expr        { SAssign{ sTarget=$1, sSource=$3 } }
   | expr ATE                { SInc{ sTarget=$1 } }
@@ -200,7 +203,7 @@ struct_sub :: { Stmt }
 --------------------------------------------------------------------------------
 -- An anonymous subprogram with no arguments or return type.
 struct_block ::         { Stmt }
-  : OPENED body CLOSED  { SBlock $2 }
+  : OPENED body CLOSED  { SBlock{ sBody=$2 } }
 
 --------------------------------------------------------------------------------
 -- A list of zero or more formal parameters.
@@ -241,7 +244,7 @@ expr ::                         { Expr }
   | expr_sentence               { $1 }
   | ID                          { EVariable $1 }
   | ID "(" call_params ")"      { EFunCall $1 $3 }
-  | ID "'s" expr PIECE          { EArrayElement $1 $3 }
+  | ID "'s" expr PIECE          { EArrElt $1 $3 }
   | "(" expr ")"                { $2 }
   | "-" expr %prec NEGATE       { EUnary UNeg $2 }
   | "!" expr                    { EUnary UNot $2 }
@@ -275,7 +278,7 @@ expr_letter ::                  { Expr }
 
 quote_chars_single ::           { String }
   : {- EMPTY -}                 { "" }
-  | quote_chars_single following_token QUOTE_CHARS
+  | quote_chars_single next_token QUOTE_CHARS
     {% case $1 ++ $3 of { _:_:_ -> syntaxError $2; cs -> return cs } }
 
 --------------------------------------------------------------------------------
@@ -291,7 +294,7 @@ quote_chars_r ::                { [String] }
 
 --------------------------------------------------------------------------------
 -- A zero-width production used to obtain the token following it.
-following_token ::  { TokenContext }
+next_token ::       { TokenContext }
   : {- EMPTY -}     {%^ return }
 
 {

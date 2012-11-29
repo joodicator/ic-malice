@@ -22,7 +22,7 @@ cleanall:
 	rm -f ${BINARIES} ${RUBBISH}
 
 test: all
-	./lexer_test.sh > /dev/null && \
+	./lexer_test.sh > /dev/null
 	./parser_test.sh > /dev/null
 
 .phony: all clean cleanall test

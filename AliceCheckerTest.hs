@@ -13,4 +13,4 @@ main = do
             hPutStrLn stderr message
             exitWith $ ExitFailure 1
         Right () -> do
-            hPutStrLn stderr "Semantic check passed."
+            putStrLn "Semantic check passed."

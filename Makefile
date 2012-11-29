@@ -1,7 +1,10 @@
 RUBBISH=*.o *.hi Alice{Lexer,Parser}.hs 
-BINARIES=Alice{Lexer,Parser,Checker}Test
+BINARIES=Alice{Lexer,Parser,Checker}Test compile
 
-all: AliceLexerTest AliceParserTest AliceCheckerTest
+all: compile
+
+compile: AliceCompiler.hs AliceChecker.hs AliceParser.hs
+	ghc AliceCompiler.hs -o compile
 
 AliceLexerTest: AliceLexerTest.hs AliceLexer.hs AliceToken.hs
 	ghc AliceLexerTest.hs -o AliceLexerTest
@@ -12,7 +15,7 @@ AliceParserTest: AliceParserTest.hs AliceLexer.hs AliceParser.hs AliceASTShow.hs
 AliceCheckerTest: AliceCheckerTest.hs AliceChecker.hs AliceParser.hs
 	ghc AliceCheckerTest.hs -o AliceCheckerTest
 
-AliceParser.hs: AliceParser.y AliceToken.hs AliceAST.hs
+AliceParser.hs: AliceParser.y AliceToken.hs AliceAST.hs AliceLexer.hs
 	happy AliceParser.y
 
 AliceLexer.hs: AliceLexer.x AliceToken.hs
@@ -24,9 +27,10 @@ clean:
 cleanall:
 	rm -f ${BINARIES} ${RUBBISH}
 
-test: all
+test: AliceLexerTest AliceParserTest AliceCheckerTest
 	./lexer_test.sh > /dev/null
 	./parser_test.sh > /dev/null
+	./checker_test.sh > /dev/null
 
 .phony: all clean cleanall test
 

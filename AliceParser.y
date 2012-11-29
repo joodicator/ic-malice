@@ -169,7 +169,7 @@ struct_either :: { Stmt }
 -- A branching structure with one or more branches.
 struct_perhaps :: { Stmt }
   : branches_r branch_default BECAUSE ALICE WAS UNSURE WHICH
-    { SBranch{ sBranches=$1, sDefault=$2 } }
+    { SBranch{ sBranches=reverse $1, sDefault=$2 } }
 
 branches_r ::                   { [(Expr, [Stmt])] }
   : PERHAPS branch              { [$2] }

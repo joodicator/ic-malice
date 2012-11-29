@@ -28,7 +28,14 @@ data Type
   | TySentence
   | TyBoolean
   | TyArray !Type
-  deriving (Eq, Show)
+  deriving Eq
+
+instance Show Type where
+    show TyNumber       = "number"
+    show TyLetter       = "letter"
+    show TySentence     = "sentence"
+    show TyBoolean      = "boolean"
+    show (TyArray ty)   = "spider " ++ show ty
 
 --------------------------------------------------------------------------------
 -- A statement: a declaration or sequential instruction.
@@ -125,12 +132,33 @@ data BiOp
   | BAndB   -- Bitwise and
   | BOrB    -- Bitwise or
   | BXOrB   -- Bitwise exclusive or
-  deriving (Eq, Show)
+  deriving Eq
 
+instance Show BiOp where
+    show BAdd   = "+"
+    show BSub   = "-"
+    show BMul   = "*"
+    show BDiv   = "/"
+    show BRem   = "%"
+    show BEqu   = "=="
+    show BNEq   = "!="
+    show BLT    = "'<'"
+    show BGE    = ">"
+    show BAnd   = "&&"
+    show BOr    = "||"
+    show BAndB  = "&"
+    show BOrB   = "|"
+    show BXOrB  = "^"
+  
 --------------------------------------------------------------------------------
 -- A unary operator symbol.
 data UnOp
   = UNeg    -- Negation
   | UNot    -- Boolean not
   | UNotB   -- Bitwise not
-  deriving (Eq, Show)
+  deriving Eq
+
+instance Show UnOp where
+    show UNeg   = "-"
+    show UNot   = "!"
+    show UNotB  = "~"

@@ -1,7 +1,10 @@
 module Main where
 
 import AliceParser
+import AliceAST
+import AliceASTShow
 
+import Control.Monad
 import System.Exit
 import System.IO
 
@@ -12,4 +15,4 @@ main = do
          hPutStrLn stderr msg
          exitWith $ ExitFailure 1
       Right ast -> do
-         print ast
+         putStrLn $ showProgram ast

@@ -5,6 +5,7 @@
 module AliceChecker where
 
 import Control.Monad
+import Control.Monad.Instances
 import Data.List
 
 import AliceAST

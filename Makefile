@@ -1,5 +1,5 @@
-RUBBISH     = *.o *.hi Alice{Lexer,Parser}.hs
-BINARIES    = Alice{Lexer,Parser,Checker}Test
+RUBBISH     = *.o *.hi AliceLexer.hs AliceParser.hs
+BINARIES    = AliceLexerTest AliceParserTest AliceCheckerTest
 LIBRARIES   = alex happy
 
 ALEX        = alex/dist/build/alex/alex

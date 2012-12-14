@@ -4,5 +4,7 @@ AliceLexer.hs
 AliceParser.hs
 *.o
 *.hi
-Alice{Lexer,Parser,Checker}Test
+AliceLexerTest
+AliceParserTest
+AliceCheckerTest
 compile
